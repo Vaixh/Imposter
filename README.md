@@ -1,2 +1,2 @@
 # Imposter
-Funny game for you games night
+Funny game for your games night
