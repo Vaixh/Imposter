@@ -1,3 +1,5 @@
+## Note: German Version!
+
 ## Requirements
 
 - [Node.js](https://nodejs.org) (LTS version)
