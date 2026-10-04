@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#173326">
+<title>Imposter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fir: #173326;
+    --fir-deep: #0f241a;
+    --fir-light: #2a5442;
+    --snow: #f4f7f2;
+    --frost: #a9c2b4;
+    --gold: #f2c14e;
+    --gold-soft: rgba(242, 193, 78, .18);
+    --berry: #c8304a;
+    --berry-dark: #a92640;
+    --berry-light: #ff7d92;
+    --radius: 18px;
+    --font: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--fir);
+    color: var(--snow);
+    font-family: var(--font);
+    font-size: 17px;
+    line-height: 1.4;
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+    -webkit-tap-highlight-color: transparent;
+  }
+  main { max-width: 520px; margin: 0 auto; }
+  main > * + * { margin-top: 16px; }
+
+  h1 { font-size: 2.4rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; margin: 0; }
+  h2 { font-size: 1.05rem; font-weight: 600; color: var(--frost); margin: 24px 0 0; display: flex; align-items: center; gap: 8px; }
+  p { margin: 0; }
+  .muted { color: var(--frost); }
+
+  /* ---------- Knöpfe ---------- */
+  button { font: inherit; cursor: pointer; border: 0; color: inherit; background: none; }
+  .btn { display: block; width: 100%; border-radius: 14px; padding: 14px 18px; font-weight: 600; }
+  .primary { background: var(--gold); color: var(--fir-deep); }
+  .secondary { border: 2px solid var(--fir-light); }
+  .danger { border: 2px solid var(--berry); color: var(--berry-light); }
+  .big { min-height: 66px; font-size: 1.3rem; font-weight: 800; border-radius: var(--radius); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .primary:disabled { background: var(--fir-light); color: var(--frost); opacity: 1; }
+  .text-btn { color: var(--frost); text-decoration: underline; padding: 6px 0; font-size: .95rem; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, [data-reveal]:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  .hint { text-align: center; color: var(--frost); font-size: .92rem; margin-top: 8px; }
+
+  input[type=text], textarea {
+    font: inherit; width: 100%; padding: 13px 14px; border-radius: 12px;
+    border: 2px solid var(--fir-light); background: var(--fir-deep); color: var(--snow);
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  .inline-form { display: flex; gap: 8px; }
+  .inline-form input { flex: 1; min-width: 0; }
+  .inline-form .btn { width: auto; }
+
+  /* ---------- Flächen ---------- */
+  .panel { background: var(--fir-deep); border-radius: var(--radius); padding: 16px; }
+  .panel > * + * { margin-top: 12px; }
+  .label { display: block; font-size: .85rem; color: var(--frost); }
+  .notice { background: var(--snow); color: var(--fir-deep); border-radius: 14px; padding: 12px 14px; font-weight: 600; }
+  .notice.quiet { background: none; color: var(--frost); border: 2px dashed var(--fir-light); font-weight: 400; }
+  .pill { display: inline-block; padding: 5px 11px; border-radius: 999px; font-size: .88rem; font-weight: 600; background: var(--fir-light); color: var(--snow); white-space: nowrap; }
+  .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .footer-links { display: flex; justify-content: center; gap: 24px; margin-top: 28px !important; }
+
+  /* ---------- Rollenleiste oben ---------- */
+  .rolebar-wrap { perspective: 1000px; }
+  .rolebar {
+    position: relative; height: 108px; transform-style: preserve-3d;
+    transition: transform .4s cubic-bezier(.2, .8, .2, 1);
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; cursor: pointer;
+    border-radius: var(--radius);
+  }
+  .rolebar.open { transform: rotateX(180deg); }
+  .rb-face {
+    position: absolute; inset: 0; border-radius: var(--radius); overflow: hidden;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
+  }
+  .rb-closed { justify-content: center; background: repeating-linear-gradient(135deg, var(--berry) 0 14px, var(--berry-dark) 14px 28px); }
+  .rb-closed::before, .rb-closed::after { content: ""; position: absolute; background: var(--gold); }
+  .rb-closed::before { top: 0; bottom: 0; left: 22%; width: 22px; }
+  .rb-closed::after { left: 0; right: 0; top: 50%; height: 22px; transform: translateY(-50%); }
+  .gift-tag {
+    position: relative; z-index: 1; background: var(--snow); color: var(--fir-deep);
+    padding: 9px 14px; border-radius: 10px; font-weight: 600; font-size: .95rem; transform: rotate(-2deg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .25);
+  }
+  .rb-front { transform: rotateX(180deg); background: var(--snow); color: var(--fir-deep); }
+  .rb-front .label { color: var(--fir-light); }
+  .rb-front .pill { background: var(--fir); }
+  .rb-front.imposter { background: var(--fir-deep); color: var(--berry-light); border: 3px solid var(--berry); }
+  .rb-front.imposter .label { color: var(--frost); }
+  .rb-front.imposter .pill { background: var(--berry); }
+  .rb-word { display: block; font-size: clamp(1.6rem, 7.5vw, 2.2rem); font-weight: 800; line-height: 1.05; overflow-wrap: anywhere; }
+
+  /* ---------- Spieler-Kacheln ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px !important; }
+  .tile {
+    display: flex; flex-direction: column; gap: 8px; text-align: left; width: 100%;
+    background: var(--fir-deep); border: 2px solid var(--fir-light); border-radius: 16px;
+    padding: 12px; min-height: 96px; position: relative;
+  }
+  .tile-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .tile-name { font-weight: 800; font-size: 1.1rem; line-height: 1.15; overflow-wrap: anywhere; margin-right: auto; }
+  .badge { font-size: .74rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--fir-light); color: var(--snow); white-space: nowrap; }
+  .tile-clues { display: flex; flex-wrap: wrap; gap: 6px; }
+  .clue { background: var(--fir-light); border-radius: 8px; padding: 4px 9px; font-weight: 600; font-size: .95rem; overflow-wrap: anywhere; }
+  .none { color: var(--frost); font-size: .9rem; font-style: italic; }
+
+  .tile.active { background: var(--gold); border-color: var(--gold); color: var(--fir-deep); animation: glow 1.8s ease-in-out infinite; }
+  .tile.active .badge { background: var(--fir-deep); color: var(--gold); }
+  .tile.active .clue { background: rgba(15, 36, 26, .14); }
+  .tile.active .none { color: rgba(15, 36, 26, .65); }
+  .tile.active::before {
+    content: "▶"; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
+    color: var(--gold); font-size: 1.1rem; line-height: 1;
+  }
+  @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 var(--gold-soft); } 50% { box-shadow: 0 0 0 7px var(--gold-soft); } }
+
+  .tile.out { opacity: .42; }
+  .tile.out .tile-name { text-decoration: line-through; }
+  button.tile { cursor: pointer; }
+  button.tile:active { transform: scale(.98); }
+  .tile.picked { border-color: var(--gold); border-width: 3px; background: var(--fir-light); }
+  .tile.picked .badge.pick { background: var(--gold); color: var(--fir-deep); }
+  .tile.picked .clue { background: var(--fir-deep); }
+  .tile.imp, .tile.imp.out { border-color: var(--berry); background: #3a1620; opacity: 1; }
+  .tile.imp .tile-name { text-decoration: none; }
+  .tile.imp .clue { background: rgba(200, 48, 74, .35); }
+  .badge.imp { background: var(--berry); }
+  .badge.host { background: var(--gold); color: var(--fir-deep); }
+  .tile .kick { font-size: .85rem; color: var(--frost); text-decoration: underline; align-self: flex-start; padding: 0; margin-top: auto; }
+
+  /* ---------- Einstellungen ---------- */
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .stepper { display: flex; align-items: center; gap: 14px; }
+  .stepper button { width: 42px; height: 42px; border-radius: 50%; background: var(--fir-light); font-size: 1.3rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 8px 13px; border-radius: 999px; border: 2px solid var(--fir-light); color: var(--frost); }
+  .chip[aria-pressed="true"] { background: var(--snow); border-color: var(--snow); color: var(--fir-deep); font-weight: 600; }
+
+  /* ---------- Auflösung & Ergebnis ---------- */
+  .spotlight { text-align: center; padding: 22px 18px; }
+  .spotlight h1 { font-size: clamp(1.9rem, 8vw, 2.5rem); }
+  .pick-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .judge { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .verdict { border-radius: var(--radius); padding: 20px 18px; }
+  .verdict > * + * { margin-top: 8px; }
+  .verdict h1 { font-size: clamp(1.8rem, 7.5vw, 2.4rem); }
+  .verdict.crew-win { background: var(--gold); color: var(--fir-deep); }
+  .verdict.crew-win .label { color: var(--fir-light); }
+  .verdict.imp-win { background: var(--berry); color: var(--snow); }
+  .verdict.imp-win .label { color: #ffd3da; }
+  .verdict .small { font-size: .95rem; opacity: .9; }
+  .word-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--snow); color: var(--fir-deep); border-radius: var(--radius); padding: 16px 18px; }
+  .word-card .label { color: var(--fir-light); }
+  .word-card strong { display: block; font-size: 1.7rem; line-height: 1.1; overflow-wrap: anywhere; }
+  .word-card .pill { background: var(--fir); }
+
+  /* ---------- Startseite ---------- */
+  .hero { padding-top: 12vh; }
+  .hero h1 { font-size: 3.4rem; }
+  .hero p { margin-top: 10px; }
+  .hero .panel { margin-top: 28px; }
+
+  .offline { background: var(--berry); padding: 10px 14px; border-radius: 12px; }
+  .toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); transform: translateX(-50%);
+    background: var(--snow); color: var(--fir-deep); padding: 12px 16px; border-radius: 12px;
+    max-width: 90vw; width: max-content; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); z-index: 10;
+  }
+
+
+  /* ---------- Stimmungen je nach Spielphase ---------- */
+  body, .panel, .tile, .rb-face, input[type=text], textarea {
+    transition: background-color .7s ease, border-color .7s ease, color .7s ease;
+  }
+  body[data-mood="vote"]   { --fir: #1c2547; --fir-deep: #121935; --fir-light: #33407a; --frost: #b3bde0; }
+  body[data-mood="reveal"] { --fir: #2c1739; --fir-deep: #1d0e27; --fir-light: #4d2c62; --frost: #cdb3dc; }
+  body[data-mood="caught"] { --fir: #45111f; --fir-deep: #2e0a14; --fir-light: #6e1f35; --frost: #e2b1bc; }
+  body[data-mood="win"]    { --fir: #0f4a30; --fir-deep: #0a3121; --fir-light: #1d7350; --frost: #b7dcc7; }
+  body[data-mood="lose"]   { --fir: #272022; --fir-deep: #1a1517; --fir-light: #423538; --frost: #b8a8ab; }
+
+  /* Große Einblendung bei wichtigen Momenten */
+  .moment {
+    position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center;
+    animation: moment-in .35s cubic-bezier(.2, .8, .2, 1);
+  }
+  .moment.leaving { animation: moment-out .35s ease forwards; }
+  .moment strong { font-size: clamp(2.6rem, 13vw, 4.2rem); font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+  .moment span { font-size: 1.2rem; max-width: 22ch; }
+  .moment small { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); opacity: .6; font-size: .85rem; }
+  .moment[data-kind="vote"]     { background: #3a4aa8; color: #fff; }
+  .moment[data-kind="reveal"]   { background: #6d3590; color: #fff; }
+  .moment[data-kind="caught"]   { background: var(--berry); color: #fff; }
+  .moment[data-kind="innocent"] { background: #4a5260; color: #fff; }
+  .moment[data-kind="neutral"]  { background: #4a5260; color: #fff; }
+  .moment[data-kind="good"]     { background: var(--gold); color: #0f241a; }
+  .moment[data-kind="win"]      { background: var(--gold); color: #0f241a; }
+  .moment[data-kind="lose"]     { background: #1a1517; color: var(--berry-light); }
+  @keyframes moment-in { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+  @keyframes moment-out { to { opacity: 0; transform: scale(.97); } }
+
+  /* Sterne fallen bei einem Sieg */
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 25; }
+  .confetti i { position: absolute; top: -24px; font-style: normal; color: var(--gold); animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: .2; } }
+
+  .you-result { display: inline-block; font-weight: 800; padding: 6px 12px; border-radius: 999px; }
+  .you-result.won { background: var(--gold); color: #0f241a; }
+  .you-result.lost { background: var(--fir-light); color: var(--frost); }
+
+  @media (max-width: 340px) { .tiles { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) {
+    .rolebar { transition: none; }
+    .moment, .moment.leaving { animation: none; }
+    .confetti { display: none; }
+    .tile.active { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const $app = document.getElementById("app");
+
+  let state = null;
+  let offline = false;
+  let revealing = false;
+  let resolvePick = false;
+  let myName = load("imposter-name");
+  const myId = load("imposter-id") || makeId();
+
+  // ---------- Hilfsfunktionen ----------
+
+  function load(key) { try { return localStorage.getItem(key); } catch { return null; } }
+  function save(key, value) { try { value == null ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch {} }
+  function makeId() {
+    const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    save("imposter-id", id);
+    return id;
+  }
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+  function nameOf(id) { return state?.players.find((p) => p.id === id)?.name || "Jemand"; }
+  function amHost() { return state && state.hostId === state.you; }
+  function cluesOf(id) { return state.round.clues.filter((c) => c.playerId === id).map((c) => c.text); }
+
+  function toast(msg) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+  }
+
+  // ---------- Verbindung ----------
+
+  function join(name) {
+    myName = name;
+    save("imposter-name", name);
+    socket.emit("join", { id: myId, name });
+  }
+
+  function forgetMe() {
+    myName = null;
+    state = null;
+    save("imposter-name", null);
+    render();
+  }
+
+  // Nach einem Serverneustart (z. B. mit neuem Code) die Seite automatisch neu laden
+  let bootId = null;
+  socket.on("boot", (id) => {
+    if (bootId && bootId !== id) location.reload();
+    bootId = id;
+  });
+
+  socket.on("connect", () => {
+    offline = false;
+    if (myName) socket.emit("join", { id: myId, name: myName });
+    render();
+  });
+  socket.on("disconnect", () => { offline = true; render(); });
+  socket.on("state", (s) => {
+    const wasMyTurn = state?.round?.turnId === state?.you;
+    const isMyTurn = s.round?.turnId === s.you;
+    if (s.phase !== state?.phase) resolvePick = false;
+    if (isMyTurn && !wasMyTurn && navigator.vibrate) navigator.vibrate(150);
+    const prev = state;
+    state = s;
+    render();
+    const moment = detectMoment(prev, s);
+    if (moment) showMoment(moment);
+  });
+  socket.on("problem", (msg) => {
+    if (!state) { myName = null; save("imposter-name", null); }
+    toast(msg);
+    render();
+  });
+  socket.on("kicked", () => { forgetMe(); toast("Du wurdest aus dem Spiel entfernt."); });
+
+  // ---------- Stimmungen & Momente ----------
+
+  function myResult(s) {
+    const r = s.round;
+    if (!r?.result || !r.inRound) return null;
+    return r.role.imposter ? r.result.imposterWins : !r.result.imposterWins;
+  }
+
+  function moodFor(s) {
+    if (!s?.round || !s.round.inRound) return "default";
+    if (s.phase === "voting") return "vote";
+    if (s.phase === "guess") return s.round.guess.type === "last" ? "caught" : "reveal";
+    if (s.phase === "result") return myResult(s) ? "win" : "lose";
+    return "default";
+  }
+
+  const THEME_COLORS = { default: "#173326", vote: "#1c2547", reveal: "#2c1739", caught: "#45111f", win: "#0f4a30", lose: "#272022" };
+  function setMood(mood) {
+    if (document.body.dataset.mood === mood) return;
+    document.body.dataset.mood = mood;
+    document.querySelector('meta[name="theme-color"]').content = THEME_COLORS[mood] || THEME_COLORS.default;
+  }
+
+  const newsKey = (r) => (r?.news ? `${r.news.type}:${r.news.playerId}:${r.news.at}` : "");
+
+  function newsMoment(s) {
+    const n = s.round.news;
+    const name = nameOf(n.playerId);
+    const me = n.playerId === s.you;
+    if (n.type === "innocent") {
+      return me
+        ? { kind: "innocent", title: "Du bist raus", sub: "Du warst unschuldig. Ab jetzt schaust du zu." }
+        : { kind: "innocent", title: `${name} war unschuldig`, sub: "Es geht weiter." };
+    }
+    if (n.type === "tie") return { kind: "neutral", title: "Gleichstand", sub: "Niemand fliegt raus. Es geht weiter." };
+    if (n.type === "not-imposter") return { kind: "neutral", title: `${name} ist kein Imposter`, sub: "Es geht weiter." };
+    if (n.type === "wrong-guess") return { kind: "good", title: `${name} lag falsch!`, sub: "Es sind aber noch weitere Imposter im Spiel." };
+    return null;
+  }
+
+  // Erkennt, ob zwischen altem und neuem Zustand etwas Wichtiges passiert ist
+  function detectMoment(prev, s) {
+    if (!prev?.round || !s.round || prev.round.id !== s.round.id || !s.round.inRound) return null;
+    const r = s.round;
+    const article = r.imposterCount > 1 ? "ein" : "der";
+
+    if (prev.phase !== s.phase) {
+      if (s.phase === "voting") return { kind: "vote", title: "Abstimmung!", sub: "Wer ist der Imposter?" };
+      if (s.phase === "guess") {
+        const name = nameOf(r.guess.imposterId);
+        const me = r.guess.imposterId === s.you;
+        if (r.guess.type === "last") {
+          return { kind: "caught", title: "Erwischt!", sub: me ? "Du darfst noch einmal raten. Sag dein Wort laut." : `${name} war ${article} Imposter.` };
+        }
+        return { kind: "reveal", title: me ? "Du löst auf!" : `${name} löst auf!`, sub: me ? "Sag jetzt laut dein Wort." : `${name} ist ${article} Imposter.` };
+      }
+      if (s.phase === "result") {
+        const won = myResult(s);
+        return { kind: won ? "win" : "lose", title: won ? "Gewonnen!" : "Verloren!", sub: verdictFor(r.result) };
+      }
+    }
+    if (r.news && newsKey(prev.round) !== newsKey(r)) return newsMoment(s);
+    return null;
+  }
+
+  let momentTimer;
+  function showMoment(m) {
+    document.querySelectorAll(".moment").forEach((el) => el.remove());
+    clearTimeout(momentTimer);
+    const el = document.createElement("div");
+    el.className = "moment";
+    el.dataset.kind = m.kind;
+    el.innerHTML = `<strong>${esc(m.title)}</strong>${m.sub ? `<span>${esc(m.sub)}</span>` : ""}<small>Tippen zum Schließen</small>`;
+    const close = () => {
+      el.classList.add("leaving");
+      setTimeout(() => el.remove(), 350);
+    };
+    el.addEventListener("click", close);
+    document.body.appendChild(el);
+    momentTimer = setTimeout(close, 4200); // Anzeigedauer in Millisekunden
+    if (navigator.vibrate) navigator.vibrate(m.kind === "win" ? [60, 40, 60, 40, 120] : [90, 50, 90]);
+    if (m.kind === "win") confetti();
+  }
+
+  function confetti() {
+    const box = document.createElement("div");
+    box.className = "confetti";
+    const shapes = ["★", "✦", "❄", "✧"];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement("i");
+      p.textContent = shapes[i % shapes.length];
+      p.style.left = Math.random() * 100 + "vw";
+      p.style.fontSize = 12 + Math.random() * 18 + "px";
+      p.style.animationDuration = 2.5 + Math.random() * 2.5 + "s";
+      p.style.animationDelay = Math.random() * 1.2 + "s";
+      if (i % 3 === 0) p.style.color = "#f4f7f2";
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 6500);
+  }
+
+  function verdictFor(res) {
+    const many = res.imposterIds.length > 1;
+    const guesser = nameOf(res.guesserId);
+    switch (res.reason) {
+      case "early-right": return `${guesser} hat das Wort erraten!`;
+      case "early-wrong": return `${guesser} hat falsch geraten!`;
+      case "last-right": return `${guesser} wurde erwischt, hat das Wort aber erraten!`;
+      case "last-wrong": return `${guesser} wurde erwischt!`;
+      case "all-caught": return "Alle Imposter sind raus!";
+      case "survived":
+        if (res.news?.type === "innocent") return `${nameOf(res.news.playerId)} war unschuldig, und jetzt ist es zu spät!`;
+        if (res.news?.type === "tie") return "Gleichstand, und jetzt ist es zu spät!";
+        return `${many ? "Die Imposter haben" : "Der Imposter hat"} überlebt!`;
+    }
+    return "";
+  }
+
+  // ---------- Bausteine ----------
+
+  // Wort bzw. Rolle oben: verdeckt, bis man gedrückt hält
+  function roleBar() {
+    const r = state.round;
+    const role = r.role;
+    const front = role.imposter
+      ? `<div class="rb-face rb-front imposter">
+           <div><span class="label">Deine Rolle</span><span class="rb-word">${r.imposterCount > 1 ? "Ein" : "Der"} Imposter</span></div>
+           <span class="pill">${role.category ? esc(role.category) : "Kein Hinweis"}</span>
+         </div>`
+      : `<div class="rb-face rb-front">
+           <div><span class="label">Dein Wort</span><span class="rb-word">${esc(role.word)}</span></div>
+           <span class="pill">${esc(role.category)}</span>
+         </div>`;
+    return `
+      <div class="rolebar-wrap">
+        <div class="rolebar${revealing ? " open" : ""}" data-reveal role="button" tabindex="0" aria-label="Gedrückt halten, um dein Wort zu sehen">
+          <div class="rb-face rb-closed"><span class="gift-tag">Gedrückt halten für dein Wort</span></div>
+          ${front}
+        </div>
+      </div>`;
+  }
+
+  // Eine Kachel pro Spieler. mode: "clues" | "vote" | "result"
+  function tile(id, mode) {
+    const r = state.round;
+    const me = id === state.you;
+    const out = r.out.includes(id);
+    const active = mode === "clues" && r.turnId === id;
+    const picked = mode === "vote" && r.myVote === id;
+    const isImp = mode === "result" && r.result.imposterIds.includes(id);
+
+    const badges = [];
+    if (active) badges.push(`<span class="badge">${me ? "Du bist dran" : "Ist dran"}</span>`);
+    else if (me) badges.push(`<span class="badge">du</span>`);
+    if (out) badges.push(`<span class="badge">raus</span>`);
+    if (picked) badges.push(`<span class="badge pick">Deine Stimme</span>`);
+    if (isImp) badges.push(`<span class="badge imp">Imposter</span>`);
+    if (mode === "result") {
+      const n = r.result.vote?.tally?.[id];
+      if (n) badges.push(`<span class="badge">${n} ${n === 1 ? "Stimme" : "Stimmen"}</span>`);
+    }
+
+    const clues = cluesOf(id);
+    const inner = `
+      <span class="tile-head"><span class="tile-name">${esc(nameOf(id))}</span>${badges.join("")}</span>
+      <span class="tile-clues">${clues.length
+        ? clues.map((c) => `<span class="clue">${esc(c)}</span>`).join("")
+        : `<span class="none">noch nichts gesagt</span>`}</span>`;
+
+    const cls = ["tile", active && "active", out && "out", picked && "picked", isImp && "imp"].filter(Boolean).join(" ");
+    const votable = mode === "vote" && !r.amOut && !out && !me;
+    return votable
+      ? `<button class="${cls}" data-action="vote" data-id="${esc(id)}" aria-pressed="${picked}">${inner}</button>`
+      : `<div class="${cls}">${inner}</div>`;
+  }
+
+  function tiles(mode) {
+    const r = state.round;
+    const ids = r.order.filter((id) => state.players.some((p) => p.id === id));
+    return `<div class="tiles">${ids.map((id) => tile(id, mode)).join("")}</div>`;
+  }
+
+  function notices() {
+    const r = state.round;
+    const n = r.news;
+    let text = "";
+    if (n) {
+      const name = esc(nameOf(n.playerId));
+      if (n.type === "innocent") text = `${name} wurde rausgewählt und war unschuldig. Es geht weiter.`;
+      else if (n.type === "tie") text = "Gleichstand bei der Abstimmung. Niemand ist raus, es geht weiter.";
+      else if (n.type === "not-imposter") text = `${name} wollte auflösen, ist aber gar kein Imposter. Es geht weiter.`;
+      else if (n.type === "wrong-guess") text = `${name} war ein Imposter, hat falsch geraten und ist raus. Es gibt noch weitere Imposter.`;
+    }
+    return `
+      ${text ? `<div class="notice">${text}</div>` : ""}
+      ${r.amOut ? `<div class="notice quiet">Du bist für diese Runde raus und schaust nur noch zu.</div>` : ""}`;
+  }
+
+  // Nur die Spielleitung hat Knöpfe. So sehen alle anderen Handys gleich aus,
+  // egal ob dort ein Imposter oder ein Crewmate spielt.
+  function hostControls() {
+    const r = state.round;
+    if (!amHost()) return "";
+    if (resolvePick) {
+      return `
+        <div class="panel">
+          <span class="label">Welcher Imposter löst auf?</span>
+          <div class="pick-list">
+            ${r.alive.map((id) => `<button class="btn secondary" data-action="resolve" data-id="${esc(id)}">${esc(nameOf(id))}${id === state.you ? " (du)" : ""}</button>`).join("")}
+          </div>
+          <button class="text-btn" data-action="resolve-cancel">Abbrechen</button>
+        </div>`;
+    }
+    // Ein Imposter: Knopf löst direkt auf. Mehrere: erst auswählen, wer auflöst.
+    return r.aliveImposterCount === 1
+      ? `<button class="btn danger" data-action="resolve-direct">Imposter löst auf</button>`
+      : `<button class="btn danger" data-action="resolve-open">Ein Imposter löst auf</button>`;
+  }
+
+  function footer(extra = "") {
+    const links = [extra, amHost() ? `<button class="text-btn" data-action="abort">Runde abbrechen</button>` : ""].filter(Boolean);
+    return links.length ? `<div class="footer-links">${links.join("")}</div>` : "";
+  }
+
+  // ---------- Ansichten ----------
+
+  function joinView() {
+    return `
+      <div class="hero">
+        <h1>Imposter</h1>
+        <p class="muted">Alle kennen das Wort. Fast alle.</p>
+        <div class="panel">
+          <input id="name" type="text" maxlength="20" placeholder="Dein Name" autocomplete="off" value="${esc(load("imposter-name") || "")}">
+          <button class="btn primary big" data-action="join">Mitspielen</button>
+        </div>
+      </div>`;
+  }
+
+  function lobbyTiles() {
+    const host = amHost();
+    return `<div class="tiles">${state.players.map((p) => `
+      <div class="tile${p.connected ? "" : " out"}">
+        <span class="tile-head">
+          <span class="tile-name">${esc(p.name)}</span>
+          ${p.id === state.hostId ? '<span class="badge host">Leitung</span>' : ""}
+          ${p.id === state.you ? '<span class="badge">du</span>' : ""}
+          ${p.connected ? "" : '<span class="badge">offline</span>'}
+        </span>
+        ${host && p.id !== state.you ? `<button class="kick" data-action="kick" data-id="${esc(p.id)}">Entfernen</button>` : ""}
+      </div>`).join("")}</div>`;
+  }
+
+  function settingsPanel() {
+    const s = state.settings;
+    const custom = s.categories.includes("Eigene Wörter");
+    return `
+      <h2>Einstellungen</h2>
+      <div class="panel">
+        <div class="row">
+          <span>Anzahl Imposter</span>
+          <div class="stepper">
+            <button data-action="imp-minus" aria-label="Weniger Imposter">−</button>
+            <strong>${s.imposters}</strong>
+            <button data-action="imp-plus" aria-label="Mehr Imposter">+</button>
+          </div>
+        </div>
+        <div class="row">
+          <span>Imposter sieht die Kategorie</span>
+          <button class="chip" data-action="toggle-hint" aria-pressed="${s.hint}">${s.hint ? "Ja" : "Nein"}</button>
+        </div>
+        <span class="label">Kategorien</span>
+        <div class="chips">
+          ${state.allCategories.map((c) => `
+            <button class="chip" data-action="cat" data-cat="${esc(c)}" aria-pressed="${s.categories.includes(c)}">${esc(c)}</button>`).join("")}
+        </div>
+        ${custom ? `<textarea id="custom" placeholder="Eure eigenen Wörter, eins pro Zeile">${esc(s.customWords.join("\n"))}</textarea>` : ""}
+      </div>`;
+  }
+
+  function lobbyView() {
+    const online = state.players.filter((p) => p.connected).length;
+    const missing = Math.max(0, 3 - online);
+    return `
+      <div class="topline"><h1>Imposter</h1><button class="text-btn" data-action="leave">Verlassen</button></div>
+      <h2>Spieler <span class="pill">${state.players.length}</span></h2>
+      ${lobbyTiles()}
+      ${amHost() ? `
+        ${settingsPanel()}
+        <div>
+          <button class="btn primary big" data-action="start" ${missing ? "disabled" : ""}>Runde starten</button>
+          ${missing ? `<p class="hint">Es fehlen noch ${missing} Mitspieler.</p>` : ""}
+        </div>`
+      : `<div class="panel muted">Warte, bis ${esc(nameOf(state.hostId))} die Runde startet.</div>`}`;
+  }
+
+  function spectatorView() {
+    return `
+      <h1>Gleich geht's los</h1>
+      <div class="notice quiet">Gerade läuft eine Runde. Ab der nächsten bist du dabei.</div>
+      ${lobbyTiles()}`;
+  }
+
+  function cluesView() {
+    const r = state.round;
+    const turnName = esc(nameOf(r.turnId));
+    const myTurn = r.turnId === state.you;
+    const entry = amHost() ? `
+      <div class="panel">
+        <label class="label" for="clue">${myTurn ? "Dein Wort eintragen" : `Wort von <strong>${turnName}</strong> eintragen`}</label>
+        <div class="inline-form">
+          <input id="clue" type="text" maxlength="40" placeholder="Was wurde gesagt?" autocomplete="off">
+          <button class="btn primary" data-action="clue">Eintragen</button>
+        </div>
+      </div>` : "";
+
+    return `
+      ${roleBar()}
+      ${notices()}
+      <h2>Spieler</h2>
+      ${tiles("clues")}
+      ${entry}
+      ${amHost() ? `
+        <div>
+          <button class="btn primary big" data-action="start-voting" ${r.allGaveClue ? "" : "disabled"}>Abstimmung starten</button>
+          ${r.allGaveClue ? "" : `<p class="hint">Freigeschaltet, sobald jeder ${r.stage > 0 ? "seit der letzten Abstimmung " : ""}ein Wort gesagt hat.</p>`}
+        </div>
+        ${hostControls()}`
+      : `<p class="hint">Abstimmen oder auflösen? Sagt es laut, ${esc(nameOf(state.hostId))} startet es.</p>`}
+      ${footer(amHost() && !myTurn ? `<button class="text-btn" data-action="skip">${turnName} überspringen</button>` : "")}`;
+  }
+
+  function votingView() {
+    const r = state.round;
+    return `
+      ${roleBar()}
+      <div class="topline">
+        <h1>Abstimmung</h1>
+        <span class="pill">${r.votedCount} / ${r.alive.length}</span>
+      </div>
+      ${notices()}
+      <p class="muted">${r.amOut ? "Du bist raus und stimmst nicht mit ab." : "Tippe auf den Spieler, den du für den Imposter hältst."}</p>
+      ${tiles("vote")}
+      ${hostControls()}
+      ${amHost() ? `<button class="btn secondary" data-action="end-voting">Abstimmung jetzt beenden</button>` : ""}
+      ${footer()}`;
+  }
+
+  function guessView() {
+    const r = state.round;
+    const g = r.guess;
+    const name = esc(nameOf(g.imposterId));
+    const article = r.imposterCount > 1 ? "ein" : "der";
+    const isGuesser = g.imposterId === state.you;
+    const isCrew = !r.role.imposter && !r.amOut;
+
+    const spotlight = `
+      <div class="panel spotlight">
+        <span class="label">${g.type === "last" ? "Erwischt" : "Auflösung"}</span>
+        <h1>${g.type === "last" ? `${name} war ${article} Imposter!` : `${name} löst auf!`}</h1>
+        <p class="muted">${g.type === "last"
+          ? `${name} darf noch einmal raten. Liegt ${name} richtig, gewinnen trotzdem die Imposter.`
+          : `${name} ist ${article} Imposter und glaubt, das Wort zu kennen.`}</p>
+      </div>`;
+
+    let body;
+    if (isGuesser) {
+      body = `<div class="notice">Sag jetzt laut, welches Wort du vermutest. Die anderen entscheiden, ob es stimmt.</div>`;
+    } else if (isCrew) {
+      body = `
+        <div class="word-card">
+          <div><span class="label">Das richtige Wort</span><strong>${esc(r.role.word)}</strong></div>
+          <span class="pill">${esc(r.role.category)}</span>
+        </div>
+        <h2>Lag ${name} richtig?</h2>
+        <div class="judge">
+          <button class="btn primary big" data-action="judge-yes">Richtig</button>
+          <button class="btn secondary big" data-action="judge-no">Falsch</button>
+        </div>`;
+    } else {
+      body = `<div class="notice quiet">${name} sagt jetzt laut die Vermutung. Die Crew entscheidet, ob sie stimmt.</div>`;
+    }
+
+    return `${spotlight}${body}${footer()}`;
+  }
+
+  function resultView() {
+    const res = state.round.result;
+    const many = res.imposterIds.length > 1;
+    const won = myResult(state);
+
+    const details = [];
+    if (res.reason === "survived") {
+      details.push(`Es sind nur noch ${many ? "so viele Crewmates wie Imposter" : "zwei Spieler"} übrig.`);
+    }
+    if (res.judgeId) {
+      details.push(`${esc(nameOf(res.judgeId))} hat die Vermutung als ${res.imposterWins ? "richtig" : "falsch"} bewertet.`);
+    }
+
+    return `
+      <div><span class="you-result ${won ? "won" : "lost"}">${won ? "Du hast gewonnen" : "Du hast verloren"}</span></div>
+      <div class="verdict ${res.imposterWins ? "imp-win" : "crew-win"}">
+        <span class="label">${res.imposterWins ? (many ? "Die Imposter gewinnen" : "Der Imposter gewinnt") : "Die Crew gewinnt"}</span>
+        <h1>${esc(verdictFor(res))}</h1>
+        ${details.length ? `<p class="small">${details.join(" ")}</p>` : ""}
+      </div>
+      <div class="word-card">
+        <div><span class="label">Das Wort war</span><strong>${esc(res.word)}</strong></div>
+        <span class="pill">${esc(res.category)}</span>
+      </div>
+      <h2>Spieler</h2>
+      ${tiles("result")}
+      ${amHost() ? `
+        <button class="btn primary big" data-action="start">Nächste Runde</button>
+        <button class="btn secondary" data-action="lobby">Zurück zur Lobby</button>`
+      : `<div class="panel muted">Warte auf die nächste Runde.</div>`}`;
+  }
+
+  // ---------- Rendern ----------
+
+  // Fokus und Text merken, damit Updates vom Server nicht beim Tippen stören
+  function saveFocus() {
+    const el = document.activeElement;
+    if (!el || !el.id || !$app.contains(el)) return null;
+    return { id: el.id, value: el.value, start: el.selectionStart, end: el.selectionEnd };
+  }
+  function restoreFocus(f) {
+    if (!f) return;
+    const el = document.getElementById(f.id);
+    if (!el) return;
+    if (f.value != null) {
+      el.value = f.value;
+      try { el.setSelectionRange(f.start, f.end); } catch {}
+    }
+    el.focus();
+  }
+
+  function renderInner() {
+    const focus = saveFocus();
+    let html = offline ? `<div class="offline">Verbindung unterbrochen. Verbinde neu …</div>` : "";
+    if (!myName || !state) html += joinView();
+    else if (state.phase === "lobby" || !state.round) html += lobbyView();
+    else if (!state.round.inRound) html += spectatorView();
+    else if (state.phase === "clues") html += cluesView();
+    else if (state.phase === "voting") html += votingView();
+    else if (state.phase === "guess") html += guessView();
+    else html += resultView();
+    $app.innerHTML = html;
+    restoreFocus(focus);
+    setMood(myName && state ? moodFor(state) : "default");
+  }
+
+  function render() {
+    try {
+      renderInner();
+    } catch (err) {
+      console.error(err);
+      $app.innerHTML = `<h1>Hoppla</h1><p>Da ist etwas schiefgelaufen. Lade die Seite bitte neu.</p>
+        <button class="btn primary big" onclick="location.reload()">Neu laden</button>`;
+    }
+  }
+
+  // ---------- Eingaben ----------
+
+  function sendSettings(patch) {
+    socket.emit("settings", { ...state.settings, ...patch });
+  }
+
+  function tryJoin() {
+    const name = document.getElementById("name").value.trim();
+    if (!name) return toast("Bitte gib deinen Namen ein.");
+    join(name);
+  }
+
+  function submitClue() {
+    const el = document.getElementById("clue");
+    const text = el.value.trim();
+    if (!text) return toast("Bitte gib ein Wort ein.");
+    socket.emit("clue", text);
+    el.value = "";
+  }
+
+  $app.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-action]");
+    if (!el) return;
+    const s = state;
+    switch (el.dataset.action) {
+      case "join": tryJoin(); break;
+      case "leave":
+        if (confirm("Spiel wirklich verlassen?")) { socket.emit("leave"); forgetMe(); }
+        break;
+      case "imp-minus": sendSettings({ imposters: Math.max(1, s.settings.imposters - 1) }); break;
+      case "imp-plus": sendSettings({ imposters: Math.min(3, s.settings.imposters + 1) }); break;
+      case "toggle-hint": sendSettings({ hint: !s.settings.hint }); break;
+      case "cat": {
+        const set = new Set(s.settings.categories);
+        const c = el.dataset.cat;
+        set.has(c) ? set.delete(c) : set.add(c);
+        sendSettings({ categories: [...set] });
+        break;
+      }
+      case "kick":
+        if (confirm(`${nameOf(el.dataset.id)} aus dem Spiel entfernen?`)) socket.emit("kick", el.dataset.id);
+        break;
+      case "start": socket.emit("start"); break;
+      case "start-voting": socket.emit("startVoting"); break;
+      case "skip": socket.emit("skip"); break;
+      case "clue": submitClue(); break;
+      case "resolve-direct":
+        if (confirm("Der Imposter löst jetzt auf? Damit wird für alle sichtbar, wer es ist.")) socket.emit("guess");
+        break;
+      case "resolve-open": resolvePick = true; render(); break;
+      case "resolve-cancel": resolvePick = false; render(); break;
+      case "resolve":
+        if (confirm(`${nameOf(el.dataset.id)} löst auf?`)) { resolvePick = false; socket.emit("guess", el.dataset.id); render(); }
+        break;
+      case "judge-yes": socket.emit("judge", true); break;
+      case "judge-no": socket.emit("judge", false); break;
+      case "end-voting": socket.emit("endVoting"); break;
+      case "vote": socket.emit("vote", el.dataset.id); break;
+      case "lobby": socket.emit("toLobby"); break;
+      case "abort":
+        if (confirm("Runde wirklich abbrechen? Alle kehren zur Lobby zurück.")) socket.emit("toLobby");
+        break;
+    }
+  });
+
+  let customTimer;
+  $app.addEventListener("input", (e) => {
+    if (e.target.id !== "custom") return;
+    clearTimeout(customTimer);
+    const value = e.target.value;
+    customTimer = setTimeout(() => {
+      sendSettings({ customWords: value.split(/[\n,]/).map((w) => w.trim()).filter(Boolean) });
+    }, 500);
+  });
+
+  // Rolle oben: nur sichtbar, solange gedrückt
+  function setReveal(on) {
+    revealing = on;
+    document.querySelectorAll("[data-reveal]").forEach((c) => c.classList.toggle("open", on));
+  }
+  $app.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest("[data-reveal]")) return;
+    e.preventDefault();
+    setReveal(true);
+  });
+  window.addEventListener("pointerup", () => setReveal(false));
+  window.addEventListener("pointercancel", () => setReveal(false));
+  window.addEventListener("blur", () => setReveal(false));
+  $app.addEventListener("contextmenu", (e) => { if (e.target.closest("[data-reveal]")) e.preventDefault(); });
+
+  $app.addEventListener("keydown", (e) => {
+    if (e.target.id === "name" && e.key === "Enter") tryJoin();
+    if (e.target.id === "clue" && e.key === "Enter") submitClue();
+    if (e.target.closest("[data-reveal]") && (e.key === " " || e.key === "Enter")) { e.preventDefault(); setReveal(true); }
+  });
+  $app.addEventListener("keyup", (e) => {
+    if (e.target.closest("[data-reveal]")) setReveal(false);
+  });
+
+  render();
+</script>
+</body>
+</html>
